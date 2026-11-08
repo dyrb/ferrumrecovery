@@ -1,4 +1,19 @@
 #[test]
+fn help_is_successful_output_and_invalid_options_remain_errors() {
+    let cli = env!("CARGO_BIN_EXE_ferrumrecovery");
+    for args in [vec![], vec!["--help"], vec!["help"], vec!["scan", "--help"]] {
+        let result = std::process::Command::new(cli).args(args).output().unwrap();
+        assert!(result.status.success());
+        assert!(result.stderr.is_empty());
+        assert!(String::from_utf8_lossy(&result.stdout).contains("Usage:"));
+    }
+    let result = std::process::Command::new(cli).args(["scan", "--invalid-option"]).output().unwrap();
+    assert_eq!(result.status.code(), Some(2));
+    assert!(result.stdout.is_empty());
+    assert!(String::from_utf8_lossy(&result.stderr).contains("unknown option"));
+}
+
+#[test]
 fn csv_cannot_truncate_its_source_image() {
     let dir = std::env::temp_dir().join(format!("fr-cli-output-{}", std::process::id()));
     std::fs::create_dir_all(&dir).unwrap();

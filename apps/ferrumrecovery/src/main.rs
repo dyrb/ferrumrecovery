@@ -25,7 +25,7 @@ Usage:
   ferrumrecovery scan <source> [filters] [options]
   ferrumrecovery info <source> <id>
   ferrumrecovery partitions <disk or image>
-  ferrumrecovery image <source> <file.img>
+  ferrumrecovery image <source> --to <file.img>
   ferrumrecovery recover <source> --to <folder> [filters] [options]
 
 Source:
@@ -188,7 +188,7 @@ fn parse_args() -> Result<Args, String> {
     Ok(a)
 }
 
-/// `1 234 567` with thin grouping, for counts.
+/// Format counts with comma-separated thousands.
 fn num(v: u64) -> String {
     let s = v.to_string();
     let mut out = String::new();
@@ -877,6 +877,10 @@ fn cmd_disks() -> Result<(), String> {
 fn main() -> ExitCode {
     let args = match parse_args() {
         Ok(a) => a,
+        Err(msg) if msg == USAGE => {
+            println!("{msg}");
+            return ExitCode::SUCCESS;
+        }
         Err(msg) => {
             eprintln!("{msg}");
             return ExitCode::from(2);
