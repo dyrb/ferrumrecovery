@@ -1,0 +1,37 @@
+[workspace]
+resolver = "3"
+members = ["crates/*", "apps/*"]
+
+[workspace.package]
+version = "0.1.0-beta.1"
+edition = "2024"
+rust-version = "1.88"
+license = "MIT OR Apache-2.0"
+repository = "https://github.com/dyrb/ferrumrecovery"
+
+[workspace.dependencies]
+fr-core = { path = "crates/fr-core" }
+fr-ntfs = { path = "crates/fr-ntfs" }
+fr-fat = { path = "crates/fr-fat" }
+fr-scan = { path = "crates/fr-scan" }
+memchr = "2.7"
+windows-sys = { version = "0.61", features = [
+    "Win32_Foundation",
+    "Win32_Globalization",
+    "Win32_Security",
+    "Win32_Storage_FileSystem",
+    "Win32_System_Console",
+    "Win32_System_IO",
+    "Win32_System_LibraryLoader",
+    "Win32_System_Ioctl",
+    "Win32_System_Threading",
+    "Win32_System_Time",
+] }
+
+[profile.release]
+opt-level = 3
+lto = "fat"
+codegen-units = 1
+panic = "unwind"
+debug = false
+strip = true

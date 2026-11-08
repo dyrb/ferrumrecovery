@@ -1,0 +1,15 @@
+[package]
+name = "ferrumrecovery"
+description = "Recovers deleted files from NTFS volumes, disks and disk images"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+
+[dependencies]
+fr-core.workspace = true
+fr-ntfs.workspace = true
+fr-fat.workspace = true
+fr-scan.workspace = true
+windows-sys.workspace = true

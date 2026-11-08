@@ -1,0 +1,13 @@
+[package]
+name = "fr-scan"
+description = "One entry point for the FerrumRecovery scanners, shared by its interfaces"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+
+[dependencies]
+fr-core.workspace = true
+fr-ntfs.workspace = true
+fr-fat.workspace = true

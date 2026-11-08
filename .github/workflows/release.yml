@@ -1,0 +1,41 @@
+name: Release
+
+on:
+  push:
+    tags: ['v*']
+
+permissions:
+  contents: read
+
+env:
+  CARGO_BUILD_JOBS: 2
+
+jobs:
+  release:
+    runs-on: windows-latest
+    permissions:
+      contents: write
+      id-token: write
+      attestations: write
+    steps:
+      - uses: actions/checkout@v5
+      - uses: dtolnay/rust-toolchain@stable
+      - name: Check release version
+        shell: pwsh
+        run: |
+          $version = (Select-String -Path Cargo.toml -Pattern '^version = "([^"]+)"$').Matches[0].Groups[1].Value
+          if ($env:GITHUB_REF_NAME -ne "v$version") { throw 'Tag and workspace versions differ' }
+      - run: cargo test --workspace --locked
+      - run: ./scripts/build-release.ps1
+        shell: pwsh
+      - uses: actions/attest-build-provenance@v2
+        with:
+          subject-path: dist/*.zip
+      - uses: softprops/action-gh-release@v2
+        with:
+          draft: true
+          prerelease: ${{ contains(github.ref_name, '-') }}
+          body_path: CHANGELOG.md
+          files: |
+            dist/*.zip
+            dist/*.zip.sha256

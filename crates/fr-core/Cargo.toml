@@ -1,0 +1,12 @@
+[package]
+name = "fr-core"
+description = "Sources, file catalog, filters and the recovery writer of FerrumRecovery"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+
+[dependencies]
+memchr.workspace = true
+windows-sys.workspace = true

@@ -1,0 +1,12 @@
+[package]
+name = "fr-fat"
+description = "Finds deleted files on FAT12, FAT16, FAT32 and exFAT volumes"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+
+[dependencies]
+fr-core.workspace = true
+windows-sys.workspace = true
