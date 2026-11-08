@@ -111,7 +111,7 @@ pub fn run(
         let chunk_at = start * 512;
         tail_records.complete(src, part.offset, chunk_at, bytes, bad == 0, &mut records);
         let mut candidates = Vec::new();
-        for (k, h) in bytes.chunks_exact(512).enumerate() {
+        for (k, h) in bytes.as_chunks::<512>().0.iter().enumerate() {
             let at = chunk_at + k as u64 * 512;
             if let Some(fmt) = carve::detect(h) {
                 candidates.push((at / 512, fmt));
@@ -123,7 +123,7 @@ pub fn run(
                     || fr_core::part::detect_fs(h) == FsKind::Fat16 && fr_fat::fat::parse_boot(h).is_some();
                 if plausible {
                     if boots.len() < 1024 {
-                        boots.push((at, h.try_into().unwrap()));
+                        boots.push((at, *h));
                     } else {
                         boot_limit = true;
                     }

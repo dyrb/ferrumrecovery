@@ -639,7 +639,7 @@ fn ole_names(s: &mut Stream) -> Vec<String> {
     for k in 0..((1u64 << shift) / 128) {
         let Some(e) = s.bytes(at + 128 * k, 128) else { break };
         let n = (u16le(e, 0x40) as usize).min(64);
-        let units: Vec<u16> = e[..n].chunks_exact(2).map(|c| u16::from_le_bytes([c[0], c[1]])).take_while(|&u| u != 0).collect();
+        let units: Vec<u16> = e[..n].as_chunks::<2>().0.iter().map(|c| u16::from_le_bytes([c[0], c[1]])).take_while(|&u| u != 0).collect();
         out.push(String::from_utf16_lossy(&units));
     }
     out
@@ -1096,7 +1096,9 @@ fn id3_name(s: &mut Stream) -> Option<String> {
                         _ => (*enc == 2, b),
                     };
                     let u: Vec<u16> = b
-                        .chunks_exact(2)
+                        .as_chunks::<2>()
+                        .0
+                        .iter()
                         .map(|c| if be { u16::from_be_bytes([c[0], c[1]]) } else { u16::from_le_bytes([c[0], c[1]]) })
                         .collect();
                     String::from_utf16_lossy(&u)
@@ -1165,7 +1167,7 @@ fn pdf_title(s: &mut Stream, len: u64) -> Option<String> {
         _ => return None,
     };
     if bytes.starts_with(&[0xFE, 0xFF]) {
-        let u: Vec<u16> = bytes[2..].chunks_exact(2).map(|c| u16::from_be_bytes([c[0], c[1]])).collect();
+        let u: Vec<u16> = bytes[2..].as_chunks::<2>().0.iter().map(|c| u16::from_be_bytes([c[0], c[1]])).collect();
         Some(String::from_utf16_lossy(&u))
     } else {
         Some(bytes.iter().map(|&c| c as char).collect())

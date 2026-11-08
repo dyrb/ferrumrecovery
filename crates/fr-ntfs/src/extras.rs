@@ -51,7 +51,7 @@ pub(crate) fn run(vol: &Volume, cat: &mut Catalog, aux: &Aux, opts: &ScanOptions
 }
 
 fn utf16(b: &[u8]) -> String {
-    let units: Vec<u16> = b.chunks_exact(2).map(|c| u16::from_le_bytes([c[0], c[1]])).take_while(|&u| u != 0).collect();
+    let units: Vec<u16> = b.as_chunks::<2>().0.iter().map(|c| u16::from_le_bytes([c[0], c[1]])).take_while(|&u| u != 0).collect();
     String::from_utf16_lossy(&units)
 }
 
@@ -321,7 +321,7 @@ fn slack_keys(buf: &mut [u8], dir_id: u64, whole: bool, out: &mut Vec<(u64, Trac
                 && end <= alloc
                 && (T_MIN..T_MAX).contains(&times[0])
                 && (T_MIN..T_MAX).contains(&times[1])
-                && buf[q + 0x42..end].chunks_exact(2).all(|c| {
+                && buf[q + 0x42..end].as_chunks::<2>().0.iter().all(|c| {
                     let u = u16::from_le_bytes([c[0], c[1]]);
                     u >= 0x20 && !(u < 0x80 && br#"/\:*?"<>|"#.contains(&(u as u8)))
                 });

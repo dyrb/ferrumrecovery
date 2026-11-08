@@ -109,7 +109,9 @@ fn parse_extents(bytes: &[u8]) -> Option<Vec<(u32, u64, u64)>> {
     }
     let entries = bytes.get(8..8usize.checked_add(count.checked_mul(24)?)?)?;
     entries
-        .chunks_exact(24)
+        .as_chunks::<24>()
+        .0
+        .iter()
         .map(|e| {
             let disk = u32::from_le_bytes(e[..4].try_into().ok()?);
             let start = i64::from_le_bytes(e[8..16].try_into().ok()?);

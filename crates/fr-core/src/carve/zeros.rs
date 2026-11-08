@@ -32,7 +32,7 @@ impl Index {
             self.coverage.push((at, at));
         }
         let mut end = at;
-        for bytes in bytes.chunks_exact(UNIT as usize) {
+        for bytes in bytes.as_chunks::<{ UNIT as usize }>().0 {
             if bytes.iter().all(|&b| b == 0) {
                 if let Some(last) = self.zeros.last_mut().filter(|r| r.1 == end) {
                     last.1 += UNIT;

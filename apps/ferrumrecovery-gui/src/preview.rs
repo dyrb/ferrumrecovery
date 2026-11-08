@@ -268,8 +268,12 @@ fn text_content(bytes: &[u8]) -> String {
     let b = &bytes[..bytes.len().min(16 << 10)];
     if b.starts_with(&[0xff, 0xfe]) || b.starts_with(&[0xfe, 0xff]) {
         let le = b[0] == 0xff;
-        let words: Vec<_> =
-            b[2..].chunks_exact(2).map(|x| if le { u16::from_le_bytes([x[0], x[1]]) } else { u16::from_be_bytes([x[0], x[1]]) }).collect();
+        let words: Vec<_> = b[2..]
+            .as_chunks::<2>()
+            .0
+            .iter()
+            .map(|x| if le { u16::from_le_bytes([x[0], x[1]]) } else { u16::from_be_bytes([x[0], x[1]]) })
+            .collect();
         return String::from_utf16_lossy(&words).replace('\0', " ");
     }
     String::from_utf8_lossy(b).chars().map(|c| if c.is_control() && c != '\n' && c != '\r' && c != '\t' { '.' } else { c }).collect()

@@ -140,7 +140,7 @@ pub fn search(src: &Source, progress: &mut dyn FnMut(u64, u64)) -> Vec<FoundFs> 
             // Sectors right after it. The NTFS size leaves out its backup boot sector.
             let end = f.offset + f.size;
             if let Ok(tail) = src.read_bytes(end, (4 * MIB).min(size.saturating_sub(end)) as usize) {
-                for (k, sec) in tail.chunks_exact(512).enumerate() {
+                for (k, sec) in tail.as_chunks::<512>().0.iter().enumerate() {
                     if boot_size(sec).is_some() {
                         todo.insert(end + 512 * k as u64);
                     }
@@ -314,7 +314,7 @@ fn gpt_slots(
         let offset = lo.checked_mul(sector).ok_or_else(bad)?;
         let size = (hi - lo + 1).checked_mul(sector).ok_or_else(bad)?;
         let units: Vec<u16> =
-            e[0x38..0x38 + 72].chunks_exact(2).map(|c| u16::from_le_bytes([c[0], c[1]])).take_while(|&u| u != 0).collect();
+            e[0x38..0x38 + 72].as_chunks::<2>().0.iter().map(|c| u16::from_le_bytes([c[0], c[1]])).take_while(|&u| u != 0).collect();
         out.push(Slot { offset, size, label: String::from_utf16_lossy(&units) });
     }
     Ok(out)

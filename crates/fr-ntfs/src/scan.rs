@@ -291,7 +291,7 @@ pub(crate) fn name_key(name: &str) -> u64 {
 }
 
 fn units_eq(raw: &[u8], s: &str) -> bool {
-    raw.len() == 2 * s.len() && raw.chunks_exact(2).zip(s.bytes()).all(|(c, b)| c[0] == b && c[1] == 0)
+    raw.len() == 2 * s.len() && raw.as_chunks::<2>().0.iter().zip(s.bytes()).all(|(c, b)| c[0] == b && c[1] == 0)
 }
 
 /// `$Rxxxxxx...` / `$Ixxxxxx...`: an item of the Recycle Bin and its description.
@@ -371,7 +371,7 @@ pub(crate) fn parse(w: &mut Worker, id: u64, rec: &mut [u8], opts: &ScanOptions)
                     let name = &v[0x42..0x42 + 2 * n];
                     let parent = u64le(v, 0);
                     if opts.traces && in_use && nsp != ns::DOS {
-                        let units: Vec<u16> = name.chunks_exact(2).map(|c| u16::from_le_bytes([c[0], c[1]])).collect();
+                        let units: Vec<u16> = name.as_chunks::<2>().0.iter().map(|c| u16::from_le_bytes([c[0], c[1]])).collect();
                         w.live_names.push((parent & 0xFFFF_FFFF_FFFF, name_key(&String::from_utf16_lossy(&units))));
                     }
                     if in_use && nsp != ns::DOS {

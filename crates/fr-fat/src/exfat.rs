@@ -137,7 +137,7 @@ pub fn parse_dir(d: &[u8], root: &mut RootInfo) -> Vec<DirEntry> {
             0x81 => root.bitmap = Some((u32le(e, 20) as u64, u64le(e, 24))),
             0x83 => {
                 let c = (e[1] as usize).min(11);
-                let units: Vec<u16> = e[2..2 + 2 * c].chunks_exact(2).map(|x| u16::from_le_bytes([x[0], x[1]])).collect();
+                let units: Vec<u16> = e[2..2 + 2 * c].as_chunks::<2>().0.iter().map(|x| u16::from_le_bytes([x[0], x[1]])).collect();
                 root.label = String::from_utf16_lossy(&units);
             }
             _ => {}
@@ -161,7 +161,9 @@ pub fn parse_dir(d: &[u8], root: &mut RootInfo) -> Vec<DirEntry> {
         let bit = if in_use { 0x80 } else { 0 };
         let ok = sc >= needed
             && set
-                .chunks_exact(32)
+                .as_chunks::<32>()
+                .0
+                .iter()
                 .skip(1)
                 .take(needed)
                 .enumerate()
@@ -171,7 +173,7 @@ pub fn parse_dir(d: &[u8], root: &mut RootInfo) -> Vec<DirEntry> {
             continue;
         }
         let mut fixed = set.to_vec();
-        for x in fixed.chunks_exact_mut(32) {
+        for x in fixed.as_chunks_mut::<32>().0.iter_mut() {
             x[0] |= 0x80;
         }
         if set_checksum(&fixed) != u16le(e, 2) || name_len == 0 {
@@ -179,8 +181,8 @@ pub fn parse_dir(d: &[u8], root: &mut RootInfo) -> Vec<DirEntry> {
             continue;
         }
         let mut units = Vec::with_capacity(name_len);
-        for x in set.chunks_exact(32).skip(2).take(needed - 1) {
-            units.extend(x[2..32].chunks_exact(2).map(|c| u16::from_le_bytes([c[0], c[1]])));
+        for x in set.as_chunks::<32>().0.iter().skip(2).take(needed - 1) {
+            units.extend(x[2..32].as_chunks::<2>().0.iter().map(|c| u16::from_le_bytes([c[0], c[1]])));
         }
         units.truncate(name_len);
         let attrs = u16le(e, 4);
@@ -346,7 +348,9 @@ impl Ctx<'_> {
         let bad = sweep(self.vol.src, base, self.boot.cluster_size, self.boot.clusters, &want, progress, &mut |c, b| {
             carver.observe(c, b);
             let head = &b[..b.len().min(40 * 32)];
-            if head.chunks_exact(32).take(20).any(|e| e[0] & 0x7F == 0x05) && !parse_dir(head, &mut RootInfo::default()).is_empty() {
+            if head.as_chunks::<32>().0.iter().take(20).any(|e| e[0] & 0x7F == 0x05)
+                && !parse_dir(head, &mut RootInfo::default()).is_empty()
+            {
                 found.push(c);
             }
         });
@@ -360,7 +364,7 @@ impl Ctx<'_> {
             // (type 0) continues in the next one.
             let mut cl = vec![c];
             let mut data = self.read_clusters(&cl);
-            while cl.len() < 256 && !data[data.len() - cs as usize..].chunks_exact(32).any(|e| e[0] == 0) {
+            while cl.len() < 256 && !data[data.len() - cs as usize..].as_chunks::<32>().0.iter().any(|e| e[0] == 0) {
                 let n = c + cl.len() as u64;
                 if n >= self.boot.clusters || count_set(&self.bm, n, 1) != 0 || self.covered.contains(&n) {
                     break;
@@ -491,7 +495,7 @@ mod tests {
         let sum = set_checksum(&s);
         s[2..4].copy_from_slice(&sum.to_le_bytes());
         if deleted {
-            for x in s.chunks_exact_mut(32) {
+            for x in s.as_chunks_mut::<32>().0.iter_mut() {
                 x[0] &= 0x7F;
             }
         }

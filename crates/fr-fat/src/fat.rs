@@ -211,7 +211,7 @@ pub fn parse_dir(d: &[u8], fat32: bool) -> Vec<DirEntry> {
     let mut out = Vec::new();
     // LFN entries seen since the last short entry, in physical order.
     let mut lfn: Vec<&[u8]> = Vec::new();
-    for (k, e) in d.chunks_exact(32).enumerate() {
+    for (k, e) in d.as_chunks::<32>().0.iter().enumerate() {
         let b0 = e[0];
         let attr = e[11];
         if b0 == 0 {
@@ -286,7 +286,7 @@ fn long_name(lfn: &[&[u8]], sfn: &mut [u8; 11], deleted: bool) -> Option<String>
     let mut units = Vec::with_capacity(13 * lfn.len());
     for e in lfn.iter().rev() {
         for r in [1..11, 14..26, 28..32] {
-            units.extend(e[r].chunks_exact(2).map(|c| u16::from_le_bytes([c[0], c[1]])));
+            units.extend(e[r].as_chunks::<2>().0.iter().map(|c| u16::from_le_bytes([c[0], c[1]])));
         }
     }
     let end = units.iter().position(|&u| u == 0 || u == 0xFFFF).unwrap_or(units.len());
@@ -633,7 +633,7 @@ pub fn scan_with_boot(src: &Source, base: u64, boot: Boot, opts: &ScanOptions) -
 
 /// Some entry of the cluster is unused: the folder ends in it.
 fn has_end(c: &[u8]) -> bool {
-    c.chunks_exact(32).any(|e| e[0] == 0)
+    c.as_chunks::<32>().0.iter().any(|e| e[0] == 0)
 }
 
 /// A cluster in the middle of a folder: no `.` entry, every used entry plausible, short
@@ -643,7 +643,7 @@ fn looks_like_dir_part(c: &[u8]) -> bool {
         return false;
     }
     let mut short = 0;
-    for e in c.chunks_exact(32).filter(|e| e[0] != 0 && e[11] & 0x3F != 0x0F) {
+    for e in c.as_chunks::<32>().0.iter().filter(|e| e[0] != 0 && e[11] & 0x3F != 0x0F) {
         let date = u16le(e, 24);
         let (m, d) = ((date >> 5) & 15, date & 31);
         if date != 0 && (!(1..=12).contains(&m) || d == 0) {
@@ -660,7 +660,7 @@ fn looks_like_dir_part(c: &[u8]) -> bool {
 /// A cluster of a directory: every used entry has a sane attribute byte and name.
 fn looks_like_dir(c: &[u8]) -> bool {
     let mut used = 0;
-    for e in c.chunks_exact(32) {
+    for e in c.as_chunks::<32>().0.iter() {
         if e[0] == 0 {
             continue;
         }
@@ -711,7 +711,7 @@ pub(crate) mod tests {
                 let part = &units[k * 13..k * 13 + 13];
                 let mut i = 0;
                 for r in [1..11, 14..26, 28..32] {
-                    for c in e[r].chunks_exact_mut(2) {
+                    for c in e[r].as_chunks_mut::<2>().0.iter_mut() {
                         c.copy_from_slice(&part[i].to_le_bytes());
                         i += 1;
                     }
