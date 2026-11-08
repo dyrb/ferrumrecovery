@@ -3,6 +3,7 @@
 mod app;
 mod cmds;
 mod diagnostics;
+mod dialog;
 mod engine;
 mod filters;
 mod lang;

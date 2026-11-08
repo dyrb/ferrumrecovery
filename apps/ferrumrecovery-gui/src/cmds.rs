@@ -8,9 +8,7 @@ use std::sync::{Arc, atomic::AtomicU64};
 use std::time::Instant;
 use windows_sys::Win32::Foundation::*;
 use windows_sys::Win32::Graphics::Gdi::{ClientToScreen, InvalidateRect};
-use windows_sys::Win32::UI::Controls::Dialogs::*;
 use windows_sys::Win32::UI::Controls::*;
-use windows_sys::Win32::UI::Shell::*;
 use windows_sys::Win32::UI::WindowsAndMessaging::*;
 
 pub const OPEN: u16 = 300;
@@ -48,69 +46,45 @@ pub fn message(text: &str, flags: u32) -> i32 {
     unsafe { MessageBoxW(hwnd, wide(text).as_ptr(), wide("FerrumRecovery").as_ptr(), flags) }
 }
 
-pub fn dialog(save: bool, sessions: bool, csv: bool) -> Option<PathBuf> {
+fn choose_dialog(options: crate::dialog::Options<'_>) -> Option<PathBuf> {
     let h = app::with(|a| a.w.main)?;
-    let filter = if csv {
-        "CSV (*.csv)\0*.csv\0\0".to_owned()
-    } else if sessions {
-        "FerrumRecovery (*.frs)\0*.frs\0\0".to_owned()
-    } else {
-        format!("{} (*.img;*.dd;*.raw;*.vhd)\0*.img;*.dd;*.raw;*.vhd\0{}\0*.*\0\0", t(S::DiskImages), t(S::AllFiles))
-    };
-    let filter: Vec<u16> = filter.encode_utf16().collect();
-    let mut buf = vec![0u16; 32768];
-    let ext = wide(if csv {
-        "csv"
-    } else if sessions {
-        "frs"
-    } else {
-        "img"
-    });
-    unsafe {
-        let mut o: OPENFILENAMEW = std::mem::zeroed();
-        o.lStructSize = std::mem::size_of::<OPENFILENAMEW>() as u32;
-        o.hwndOwner = h;
-        o.lpstrFilter = filter.as_ptr();
-        o.lpstrFile = buf.as_mut_ptr();
-        o.nMaxFile = buf.len() as u32;
-        o.lpstrDefExt = ext.as_ptr();
-        o.Flags = OFN_EXPLORER | OFN_NOCHANGEDIR | OFN_PATHMUSTEXIST | if save { 0 } else { OFN_FILEMUSTEXIST };
-        let ok = if save { GetSaveFileNameW(&mut o) } else { GetOpenFileNameW(&mut o) };
-        if ok == 0 {
-            let code = CommDlgExtendedError();
-            if code != 0 {
-                message(&lang::error(&fr_core::error::Error::value("file dialog failed (code {})", code)), MB_OK | MB_ICONERROR);
-            }
-            return None;
+    match crate::dialog::show(h, options) {
+        Ok(result) => result.map(|(path, _)| path),
+        Err(code) => {
+            let error = fr_core::error::Error::value("file dialog failed (code {})", format!("0x{:08X}", code as u32));
+            message(&lang::error(&error), MB_OK | MB_ICONERROR);
+            None
         }
     }
-    let n = buf.iter().position(|&x| x == 0).unwrap_or(buf.len());
-    Some(PathBuf::from(String::from_utf16_lossy(&buf[..n])))
+}
+
+pub fn dialog(save: bool, sessions: bool, csv: bool) -> Option<PathBuf> {
+    let label = format!("{} (*.img;*.dd;*.raw;*.vhd)", t(S::DiskImages));
+    let images = [(label.as_str(), "*.img;*.dd;*.raw;*.vhd"), (t(S::AllFiles), "*.*")];
+    let session = [("FerrumRecovery (*.frs)", "*.frs")];
+    let report = [("CSV (*.csv)", "*.csv")];
+    choose_dialog(crate::dialog::Options {
+        kind: if save { crate::dialog::Kind::Save { overwrite: false } } else { crate::dialog::Kind::Open },
+        filters: if csv {
+            &report
+        } else if sessions {
+            &session
+        } else {
+            &images
+        },
+        extension: if csv {
+            "csv"
+        } else if sessions {
+            "frs"
+        } else {
+            "img"
+        },
+        ..Default::default()
+    })
 }
 
 fn folder() -> Option<PathBuf> {
-    let h = app::with(|a| a.w.main)?;
-    let title = wide(t(S::ChooseTarget));
-    let mut name = [0u16; 260];
-    unsafe {
-        let mut b: BROWSEINFOW = std::mem::zeroed();
-        b.hwndOwner = h;
-        b.pszDisplayName = name.as_mut_ptr();
-        b.lpszTitle = title.as_ptr();
-        b.ulFlags = BIF_RETURNONLYFSDIRS | BIF_NEWDIALOGSTYLE;
-        let pidl = SHBrowseForFolderW(&b);
-        if pidl.is_null() {
-            return None;
-        }
-        let mut path = vec![0u16; 32768];
-        let ok = SHGetPathFromIDListEx(pidl, path.as_mut_ptr(), path.len() as u32, 0);
-        windows_sys::Win32::System::Com::CoTaskMemFree(pidl.cast());
-        if ok == 0 {
-            return None;
-        }
-        let n = path.iter().position(|&x| x == 0).unwrap_or(0);
-        Some(PathBuf::from(String::from_utf16_lossy(&path[..n])))
-    }
+    choose_dialog(crate::dialog::Options { kind: crate::dialog::Kind::Folder, title: t(S::ChooseTarget), ..Default::default() })
 }
 
 pub fn start(spec: String, part: Option<fr_core::Part>) {

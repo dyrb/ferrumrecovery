@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.1.1
+
+- Use modern Windows file and folder dialogs throughout the interface.
+- Preserve file filters, default extensions, cancellation and existing overwrite rules.
+
 ## 0.1.0
 
 First regular release for Windows 10 and 11, x64.

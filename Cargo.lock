@@ -4,7 +4,7 @@ version = 4
 
 [[package]]
 name = "ferrumrecovery"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "fr-core",
  "fr-fat",
@@ -15,7 +15,7 @@ dependencies = [
 
 [[package]]
 name = "ferrumrecovery-gui"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "fr-core",
  "fr-scan",
@@ -24,7 +24,7 @@ dependencies = [
 
 [[package]]
 name = "fr-core"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "memchr",
  "windows-sys",
@@ -32,7 +32,7 @@ dependencies = [
 
 [[package]]
 name = "fr-fat"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "fr-core",
  "windows-sys",
@@ -40,14 +40,14 @@ dependencies = [
 
 [[package]]
 name = "fr-ntfs"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "fr-core",
 ]
 
 [[package]]
 name = "fr-scan"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "fr-core",
  "fr-fat",
