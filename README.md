@@ -147,3 +147,5 @@ See also [FerrumCompare](https://github.com/dyrb/ferrumcompare).
 ## License
 
 Licensed under either [Apache License 2.0](LICENSE-APACHE) or [MIT](LICENSE-MIT), at your option.
+
+Third-party license notices: [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).

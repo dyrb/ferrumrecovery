@@ -151,3 +151,5 @@ cargo test --workspace --locked
 ## Лицензия
 
 [Apache License 2.0](LICENSE-APACHE) или [MIT](LICENSE-MIT), на ваш выбор.
+
+Уведомления о сторонних библиотеках: [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).

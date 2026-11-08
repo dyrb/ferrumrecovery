@@ -1,6 +1,6 @@
 # Changelog
 
-## 0.1.0-beta.1
+## 0.1.0-beta.2
 
 First public preview for Windows 10 and 11, x64.
 

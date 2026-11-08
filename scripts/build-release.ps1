@@ -29,7 +29,7 @@ try {
         Copy-Item -LiteralPath $source -Destination $destination -Force
         $archiveFiles += [pscustomobject]@{ Source = Join-Path $destination $file; Name = $file }
     }
-    foreach ($file in 'README.md', 'README.ru.md', 'CHANGELOG.md', 'LICENSE-MIT', 'LICENSE-APACHE') {
+    foreach ($file in 'README.md', 'README.ru.md', 'CHANGELOG.md', 'LICENSE-MIT', 'LICENSE-APACHE', 'THIRD_PARTY_NOTICES.md') {
         Copy-Item -LiteralPath (Join-Path $projectRoot $file) -Destination $destination -Force
         $archiveFiles += [pscustomobject]@{ Source = Join-Path $destination $file; Name = $file }
     }
